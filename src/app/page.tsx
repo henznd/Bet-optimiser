@@ -20,11 +20,10 @@ export default function Home() {
   const [selectedBookmaker, setSelectedBookmaker] = useState('');
   const [bestOpportunity, setBestOpportunity] = useState<ArbitrageOpportunity | null>(null);
   const [loadingBest, setLoadingBest] = useState(true);
+  const [bestOppBookmaker, setBestOppBookmaker] = useState('');
 
   useEffect(() => {
-    async function fetchInitialData() {
-      setLoadingBest(true);
-      // Fetch sports for the dropdown
+    async function fetchSports() {
       try {
         const response = await fetch('/api/sports');
         if (response.ok) {
@@ -32,20 +31,29 @@ export default function Home() {
             setSportGroups(Array.from(new Set(data.map((s) => s.group))).sort());
         }
       } catch (error) { console.error("Failed to fetch sports", error); }
+    }
+    fetchSports();
+  }, []);
 
-      // Fetch the single best opportunity
+  useEffect(() => {
+    async function fetchBestOpportunity() {
+      setLoadingBest(true);
       try {
-        const response = await fetch('/api/best-opportunity');
+        const response = await fetch(`/api/best-opportunity?bookmaker=${bestOppBookmaker}`);
         if (response.ok) {
             const data = await response.json();
             setBestOpportunity(data);
+        } else {
+          setBestOpportunity(null);
         }
-      } catch (error) { console.error("Failed to fetch best opportunity", error); }
-      
+      } catch (error) { 
+        console.error("Failed to fetch best opportunity", error); 
+        setBestOpportunity(null);
+      }
       setLoadingBest(false);
     }
-    fetchInitialData();
-  }, []);
+    fetchBestOpportunity();
+  }, [bestOppBookmaker]);
 
   return (
     <main className="min-h-screen bg-background flex flex-col items-center p-4 sm:p-8 md:p-12">
@@ -59,14 +67,35 @@ export default function Home() {
           </p>
         </header>
 
-        {loadingBest ? (
-          <div className="text-center p-6"><p className="text-primary animate-pulse">Recherche de la meilleure opportunité...</p></div>
-        ) : bestOpportunity ? (
-          <div className="mb-8">
+        <div className="bg-card rounded-xl shadow-lg p-6 mb-8 border border-amber-500/30">
             <h2 className="text-2xl font-bold text-center mb-4 text-amber-500">🔥 Meilleure Opportunité Actuelle</h2>
-            <ArbitrageOpportunities.BestOpportunityCard opportunity={bestOpportunity} onSelect={() => {}} />
-          </div>
-        ) : null}
+            <div className="max-w-sm mx-auto mb-6">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
+                Filtrer par bookmaker
+              </label>
+              <select
+                  value={bestOppBookmaker}
+                  onChange={(e) => setBestOppBookmaker(e.target.value)}
+                  className="w-full px-3 py-2 border bg-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                  <option value="">Tous les bookmakers</option>
+                  <optgroup label="🇫🇷 Bookmakers Français">
+                    <option value="parionssport_fr">Parions Sport (FR)</option>
+                    <option value="winamax_fr">Winamax (FR)</option>
+                    <option value="unibet_fr">Unibet (FR)</option>
+                    <option value="betclic_fr">Betclic (FR)</option>
+                  </optgroup>
+              </select>
+            </div>
+
+            {loadingBest ? (
+              <div className="text-center p-6"><p className="text-primary animate-pulse">Recherche en cours...</p></div>
+            ) : bestOpportunity ? (
+                <ArbitrageOpportunities.BestOpportunityCard opportunity={bestOpportunity} onSelect={() => {}} />
+            ) : (
+              <p className="text-center text-muted-foreground">Aucune opportunité trouvée pour cette sélection.</p>
+            )}
+        </div>
 
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 

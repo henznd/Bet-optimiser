@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 const ODDS_API_KEY = 'd3fb979e24b39fe4186876ad3225a2e4';
 const API_URL = 'https://api.the-odds-api.com/v4/sports';
@@ -10,10 +11,14 @@ interface Match { id: string; sport_key: string; sport_title: string; home_team:
 interface ArbitrageOpportunity { match: Match; outcomes: { name: string; price: number; bookmaker: string; }[]; freebetProfit: number; cashArbitrageROI: number | null; }
 
 // Cette fonction est une copie de celle dans arbitrage-by-sport/route.ts
-const findArbitrageOpportunities = (matches: Match[]): ArbitrageOpportunity[] => {
+const findArbitrageOpportunities = (matches: Match[], bookmakerKey?: string | null): ArbitrageOpportunity[] => {
     const opportunities: ArbitrageOpportunity[] = [];
     matches.forEach(match => {
-        match.bookmakers.forEach(bookmaker => {
+        const bookmakersToScan = bookmakerKey
+            ? match.bookmakers.filter(b => b.key === bookmakerKey)
+            : match.bookmakers;
+            
+        bookmakersToScan.forEach(bookmaker => {
             const market = bookmaker.markets.find(m => m.key === 'h2h');
             if (market && (market.outcomes.length === 2 || market.outcomes.length === 3)) {
                 let C: number[] = market.outcomes.map(o => o.price);
@@ -47,7 +52,10 @@ const findArbitrageOpportunities = (matches: Match[]): ArbitrageOpportunity[] =>
     return opportunities;
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const bookmakerKey = searchParams.get('bookmaker');
+
   try {
     const sportsResponse = await fetch(`${API_URL}?apiKey=${ODDS_API_KEY}`);
     if (!sportsResponse.ok) throw new Error('Impossible de charger la liste des sports');
@@ -70,7 +78,7 @@ export async function GET() {
         }
     }
 
-    const allOpportunities = findArbitrageOpportunities(allMatches);
+    const allOpportunities = findArbitrageOpportunities(allMatches, bookmakerKey);
 
     if (allOpportunities.length === 0) {
       return NextResponse.json(null); // Pas d'opportunité trouvée
