@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ODDS_API_KEY = 'd3fb979e24b39fe4186876ad3225a2e4';
+const ODDS_API_KEY = 'a8f8458affe97962996ed347a1465651';
 const API_URL = 'https://api.the-odds-api.com/v4/sports';
 
 interface Sport { key: string; group: string; active: boolean; }

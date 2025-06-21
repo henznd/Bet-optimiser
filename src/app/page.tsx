@@ -28,7 +28,17 @@ export default function Home() {
         const response = await fetch('/api/sports');
         if (response.ok) {
             const data: {group: string}[] = await response.json();
-            setSportGroups(Array.from(new Set(data.map((s) => s.group))).sort());
+            const groups = Array.from(new Set(data.map((s) => s.group)));
+            
+            // Mettre "Soccer" en premier, puis trier le reste
+            const soccerIndex = groups.indexOf('Soccer');
+            if (soccerIndex > -1) {
+                groups.splice(soccerIndex, 1);
+                groups.sort().unshift('Soccer');
+            } else {
+                groups.sort();
+            }
+            setSportGroups(groups);
         }
       } catch (error) { console.error("Failed to fetch sports", error); }
     }
@@ -119,7 +129,9 @@ export default function Home() {
                   >
                     <option value="">Sélectionnez un sport</option>
                     {sportGroups.map(group => (
-                      <option key={group} value={group}>{group.charAt(0).toUpperCase() + group.slice(1).replace(/_/g, ' ')}</option>
+                      <option key={group} value={group}>
+                        {group === 'Soccer' ? 'Football' : group.charAt(0).toUpperCase() + group.slice(1).replace(/_/g, ' ')}
+                      </option>
                     ))}
                   </select>
                 </div>
