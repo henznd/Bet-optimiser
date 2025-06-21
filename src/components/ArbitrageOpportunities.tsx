@@ -262,49 +262,50 @@ export default function ArbitrageOpportunities({ sportGroup, selectedBookmaker }
 }
 
 function BestOpportunityCard({ opportunity, onSelect }: { opportunity: ArbitrageOpportunity; onSelect: (opportunity: ArbitrageOpportunity) => void }) {
-  const [showCalculator, setShowCalculator] = useState(false);
+  const { match, outcomes, freebetProfit, cashArbitrageROI } = opportunity;
+  const isTwoWay = outcomes.length === 2;
 
   return (
-    <>
-      <div 
-        className="bg-card rounded-xl shadow-lg p-5 border transition-all hover:border-primary cursor-pointer max-w-2xl mx-auto"
-        onClick={() => {
-          onSelect(opportunity);
-          setShowCalculator(true);
-        }}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-foreground">{opportunity.match.home_team} vs {opportunity.match.away_team}</h3>
-          <span className="text-sm text-muted-foreground">{new Date(opportunity.match.commence_time).toLocaleDateString('fr-FR')}</span>
-        </div>
-        <div className={`grid grid-cols-1 md:grid-cols-${opportunity.outcomes.length} gap-4 text-center`}>
-          {opportunity.outcomes.map(o => (
-            <div key={o.name} className="bg-secondary p-3 rounded-lg">
-              <p className="text-sm text-muted-foreground">{o.name}</p>
-              <p className="text-lg font-bold text-primary">{o.price.toFixed(2)}</p>
-              <p className="text-xs text-accent-foreground">{o.bookmaker}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 text-center">
-          <p className="text-lg font-bold text-green-500">
-            Profit Freebet (100€) : {opportunity.freebetProfit.toFixed(2)}€
-          </p>
-          {opportunity.cashArbitrageROI !== null && (
-            <p className="text-sm font-bold text-yellow-400 mt-1">
-              🔥 Surebet Cash : +{opportunity.cashArbitrageROI.toFixed(2)}%
-            </p>
-          )}
-          <p className="text-sm text-muted-foreground mt-2 opacity-80 group-hover:opacity-100 transition-opacity">💡 Cliquez pour calculer votre répartition</p>
-        </div>
+    <div 
+      className="bg-card rounded-xl shadow-lg p-6 border transition-all hover:shadow-xl hover:border-primary/50 cursor-pointer"
+      onClick={() => onSelect(opportunity)}
+    >
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-xl font-bold text-foreground pr-4">
+          {match.home_team} vs {match.away_team}
+        </h3>
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
+          {new Date(match.commence_time).toLocaleDateString()}
+        </span>
       </div>
-      {showCalculator && (
-        <BetCalculator 
-          opportunity={opportunity} 
-          onClose={() => setShowCalculator(false)} 
-        />
-      )}
-    </>
+      
+      <div className={`grid ${isTwoWay ? 'grid-cols-2' : 'grid-cols-3'} gap-3 mb-5`}>
+        {outcomes.map((outcome, index) => (
+          <div key={index} className="bg-secondary p-3 rounded-lg text-center">
+            <p className="text-sm text-muted-foreground truncate">{outcome.name}</p>
+            <p className="text-2xl font-bold text-primary">{outcome.price.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground truncate">{outcome.bookmaker}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="text-center">
+        {cashArbitrageROI !== null && cashArbitrageROI > 0 ? (
+           <div className="bg-green-500/10 text-green-600 dark:text-green-400 p-3 rounded-lg">
+             <p className="font-bold text-lg">Profit Garanti (Cash) : {cashArbitrageROI.toFixed(2)}%</p>
+           </div>
+        ) : freebetProfit > 0 ? (
+          <div className="bg-green-500/10 text-green-600 dark:text-green-400 p-3 rounded-lg">
+            <p className="font-bold text-lg">Profit Freebet (100€) : {freebetProfit.toFixed(2)}€</p>
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">Pas d'opportunité de profit direct.</p>
+        )}
+        <p className="text-xs text-muted-foreground mt-2 animate-pulse">
+          💡 Cliquez pour calculer votre répartition
+        </p>
+      </div>
+    </div>
   );
 }
 
