@@ -37,12 +37,8 @@ interface ArbitrageOpportunity {
 }
 
 interface BetDistribution {
-  cash1: number;
-  cash2: number;
-  cash3: number;
-  freebet1: number;
-  freebet2: number;
-  freebet3: number;
+  cashStakes: number[];
+  freebetStakes: number[];
   totalProfit: number;
 }
 
@@ -56,49 +52,34 @@ function BetCalculator({ opportunity, onClose }: { opportunity: ArbitrageOpportu
 
   const calculateDistribution = () => {
     const { outcomes } = opportunity;
-    if (outcomes.length !== 3) return;
+    const C = outcomes.map(o => o.price);
+    const n = outcomes.length;
 
-    const C1 = outcomes[0].price;
-    const C2 = outcomes[1].price;
-    const C3 = outcomes[2].price;
+    let cashStakes = Array(n).fill(0), cashProfit = 0;
+    let freebetStakes = Array(n).fill(0), freebetProfit = 0;
 
-    let cash1 = 0, cash2 = 0, cash3 = 0, cashProfit = 0;
-    let freebet1 = 0, freebet2 = 0, freebet3 = 0, freebetProfit = 0;
-
-    // --- Calcul de la répartition du cash pour équilibrer les retours ---
     if (cashAmount > 0) {
-      const invC1 = 1 / C1, invC2 = 1 / C2, invC3 = 1 / C3;
-      const sumInvC = invC1 + invC2 + invC3;
-      const totalCashReturn = cashAmount / sumInvC;
-      cashProfit = totalCashReturn - cashAmount; // Sera négatif si ce n'est pas un arbitrage pur
-      cash1 = totalCashReturn * invC1;
-      cash2 = totalCashReturn * invC2;
-      cash3 = totalCashReturn * invC3;
+      const invC = C.map(c => 1 / c);
+      const sumInvC = invC.reduce((a, b) => a + b, 0);
+      const totalReturn = cashAmount / sumInvC;
+      cashProfit = totalReturn - cashAmount;
+      cashStakes = C.map(c => totalReturn / c);
     }
 
-    // --- Calcul de la répartition des freebets pour équilibrer les profits ---
     if (freebetAmount > 0) {
-      const a1 = C1 - 1, a2 = C2 - 1, a3 = C3 - 1;
-      if (a1 > 0 && a2 > 0 && a3 > 0) {
-        const invA1 = 1 / a1, invA2 = 1 / a2, invA3 = 1 / a3;
-        const sumInvA = invA1 + invA2 + invA3;
+      const A = C.map(c => c - 1);
+      if (A.every(a => a > 0)) {
+        const invA = A.map(a => 1 / a);
+        const sumInvA = invA.reduce((a, b) => a + b, 0);
         freebetProfit = freebetAmount / sumInvA;
-        freebet1 = freebetProfit * invA1;
-        freebet2 = freebetProfit * invA2;
-        freebet3 = freebetProfit * invA3;
+        freebetStakes = A.map(a => freebetProfit / a);
       }
     }
     
-    const totalProfit = cashProfit + freebetProfit;
-
     setDistribution({
-      cash1,
-      cash2,
-      cash3,
-      freebet1,
-      freebet2,
-      freebet3,
-      totalProfit,
+      cashStakes,
+      freebetStakes,
+      totalProfit: cashProfit + freebetProfit,
     });
   };
 
@@ -160,25 +141,15 @@ function BetCalculator({ opportunity, onClose }: { opportunity: ArbitrageOpportu
           <div className="space-y-4 pt-4">
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
               <h4 className="font-bold text-primary mb-2 text-center">📊 Répartition des mises</h4>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                    <div className="text-sm text-muted-foreground">{opportunity.outcomes[0].name}</div>
-                    <div className="text-lg font-bold">{(distribution.cash1 + distribution.freebet1).toFixed(2)}€</div>
-                    <div className="text-xs text-muted-foreground mt-1">Cash: {distribution.cash1.toFixed(2)}€</div>
-                    <div className="text-xs text-muted-foreground">Freebet: {distribution.freebet1.toFixed(2)}€</div>
-                </div>
-                <div>
-                    <div className="text-sm text-muted-foreground">{opportunity.outcomes[1].name}</div>
-                    <div className="text-lg font-bold">{(distribution.cash2 + distribution.freebet2).toFixed(2)}€</div>
-                    <div className="text-xs text-muted-foreground mt-1">Cash: {distribution.cash2.toFixed(2)}€</div>
-                    <div className="text-xs text-muted-foreground">Freebet: {distribution.freebet2.toFixed(2)}€</div>
-                </div>
-                <div>
-                    <div className="text-sm text-muted-foreground">{opportunity.outcomes[2].name}</div>
-                    <div className="text-lg font-bold">{(distribution.cash3 + distribution.freebet3).toFixed(2)}€</div>
-                    <div className="text-xs text-muted-foreground mt-1">Cash: {distribution.cash3.toFixed(2)}€</div>
-                    <div className="text-xs text-muted-foreground">Freebet: {distribution.freebet3.toFixed(2)}€</div>
-                </div>
+              <div className={`grid grid-cols-${opportunity.outcomes.length} gap-4 text-center`}>
+                {opportunity.outcomes.map((outcome, index) => (
+                    <div key={index}>
+                        <div className="text-sm text-muted-foreground">{outcome.name}</div>
+                        <div className="text-lg font-bold">{(distribution.cashStakes[index] + distribution.freebetStakes[index]).toFixed(2)}€</div>
+                        <div className="text-xs text-muted-foreground mt-1">Cash: {distribution.cashStakes[index].toFixed(2)}€</div>
+                        <div className="text-xs text-muted-foreground">Freebet: {distribution.freebetStakes[index].toFixed(2)}€</div>
+                    </div>
+                ))}
               </div>
               <div className="text-xs text-center text-muted-foreground mt-3 pt-2 border-t border-primary/10">
                 Total misé : <span className="font-semibold">{(cashAmount + freebetAmount).toFixed(2)}€</span>
@@ -267,36 +238,11 @@ export default function ArbitrageOpportunities({ sportGroup, selectedBookmaker }
       <div className="space-y-6">
         {opportunities.length > 0 ? (
           opportunities.map(opp => (
-            <div 
+            <BestOpportunityCard 
               key={opp.match.id} 
-              className="bg-card rounded-xl shadow-lg p-5 border transition-all hover:border-primary cursor-pointer"
-              onClick={() => setSelectedOpportunity(opp)}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-foreground">{opp.match.home_team} vs {opp.match.away_team}</h3>
-                <span className="text-sm text-muted-foreground">{new Date(opp.match.commence_time).toLocaleDateString('fr-FR')}</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                {opp.outcomes.map(o => (
-                  <div key={o.name} className="bg-secondary p-3 rounded-lg">
-                    <p className="text-sm text-muted-foreground">{o.name}</p>
-                    <p className="text-lg font-bold text-primary">{o.price.toFixed(2)}</p>
-                    <p className="text-xs text-accent-foreground">{o.bookmaker}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 text-center">
-                <p className="text-lg font-bold text-green-500">
-                  Profit Freebet (100€) : {opp.freebetProfit.toFixed(2)}€
-                </p>
-                {opp.cashArbitrageROI !== null && (
-                  <p className="text-sm font-bold text-yellow-400 mt-1">
-                    🔥 Surebet Cash : +{opp.cashArbitrageROI.toFixed(2)}%
-                  </p>
-                )}
-                <p className="text-sm text-muted-foreground mt-2 opacity-80 group-hover:opacity-100 transition-opacity">💡 Cliquez pour calculer votre répartition</p>
-              </div>
-            </div>
+              opportunity={opp} 
+              onSelect={(opportunity) => setSelectedOpportunity(opportunity)}
+            />
           ))
         ) : (
           <div className="text-center p-6 bg-card rounded-xl border">
@@ -314,3 +260,52 @@ export default function ArbitrageOpportunities({ sportGroup, selectedBookmaker }
     </>
   );
 }
+
+function BestOpportunityCard({ opportunity, onSelect }: { opportunity: ArbitrageOpportunity; onSelect: (opportunity: ArbitrageOpportunity) => void }) {
+  const [showCalculator, setShowCalculator] = useState(false);
+
+  return (
+    <>
+      <div 
+        className="bg-card rounded-xl shadow-lg p-5 border transition-all hover:border-primary cursor-pointer max-w-2xl mx-auto"
+        onClick={() => {
+          onSelect(opportunity);
+          setShowCalculator(true);
+        }}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-foreground">{opportunity.match.home_team} vs {opportunity.match.away_team}</h3>
+          <span className="text-sm text-muted-foreground">{new Date(opportunity.match.commence_time).toLocaleDateString('fr-FR')}</span>
+        </div>
+        <div className={`grid grid-cols-1 md:grid-cols-${opportunity.outcomes.length} gap-4 text-center`}>
+          {opportunity.outcomes.map(o => (
+            <div key={o.name} className="bg-secondary p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground">{o.name}</p>
+              <p className="text-lg font-bold text-primary">{o.price.toFixed(2)}</p>
+              <p className="text-xs text-accent-foreground">{o.bookmaker}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 text-center">
+          <p className="text-lg font-bold text-green-500">
+            Profit Freebet (100€) : {opportunity.freebetProfit.toFixed(2)}€
+          </p>
+          {opportunity.cashArbitrageROI !== null && (
+            <p className="text-sm font-bold text-yellow-400 mt-1">
+              🔥 Surebet Cash : +{opportunity.cashArbitrageROI.toFixed(2)}%
+            </p>
+          )}
+          <p className="text-sm text-muted-foreground mt-2 opacity-80 group-hover:opacity-100 transition-opacity">💡 Cliquez pour calculer votre répartition</p>
+        </div>
+      </div>
+      {showCalculator && (
+        <BetCalculator 
+          opportunity={opportunity} 
+          onClose={() => setShowCalculator(false)} 
+        />
+      )}
+    </>
+  );
+}
+
+ArbitrageOpportunities.BestOpportunityCard = BestOpportunityCard;

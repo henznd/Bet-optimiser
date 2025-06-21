@@ -13,23 +13,23 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
       <div className="flex space-x-2 rounded-lg bg-secondary p-1.5">
         <button
           className={`w-full rounded-md px-4 py-2 text-sm font-medium transition-all ${
-            activeTab === 'manual'
-              ? 'bg-primary text-primary-foreground shadow-md'
-              : 'text-muted-foreground hover:bg-background/50'
-          }`}
-          onClick={() => onTabChange('manual')}
-        >
-          Calcul Manuel
-        </button>
-        <button
-          className={`w-full rounded-md px-4 py-2 text-sm font-medium transition-all ${
             activeTab === 'api'
               ? 'bg-primary text-primary-foreground shadow-md'
               : 'text-muted-foreground hover:bg-background/50'
           }`}
           onClick={() => onTabChange('api')}
         >
-          Cotes en Direct
+          Recherche d'opportunités
+        </button>
+        <button
+          className={`w-full rounded-md px-4 py-2 text-sm font-medium transition-all ${
+            activeTab === 'manual'
+              ? 'bg-primary text-primary-foreground shadow-md'
+              : 'text-muted-foreground hover:bg-background/50'
+          }`}
+          onClick={() => onTabChange('manual')}
+        >
+          Calculateur Manuel
         </button>
       </div>
     </div>

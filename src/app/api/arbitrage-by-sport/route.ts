@@ -21,36 +21,53 @@ const findArbitrageOpportunities = (matches: Match[], bookmakerKey?: string | nu
 
         bookmakersToScan.forEach(bookmaker => {
             const market = bookmaker.markets.find(m => m.key === 'h2h');
-            if (market && market.outcomes.length === 3) {
-                const odds: { [key: string]: number } = {};
-                market.outcomes.forEach(o => {
-                    const outcomeName = o.name === match.home_team ? '1' : o.name === match.away_team ? '2' : 'N';
-                    odds[outcomeName] = o.price;
-                });
+            if (market && (market.outcomes.length === 2 || market.outcomes.length === 3)) {
+                
+                let C1: number, C2: number, C3: number | undefined;
+                let outcomes: { name: string; price: number; bookmaker: string; }[];
 
-                if (odds['1'] && odds['N'] && odds['2']) {
-                    const C1 = odds['1'], C2 = odds['N'], C3 = odds['2'];
+                if (market.outcomes.length === 3) {
+                    const odds: { [key: string]: number } = {};
+                     market.outcomes.forEach(o => {
+                        const outcomeName = o.name === match.home_team ? '1' : o.name === match.away_team ? '2' : 'N';
+                        odds[outcomeName] = o.price;
+                    });
+                    if (!odds['1'] || !odds['N'] || !odds['2']) return;
+                    C1 = odds['1']; C2 = odds['N']; C3 = odds['2'];
+                    outcomes = [
+                        { name: match.home_team, price: C1, bookmaker: bookmaker.title },
+                        { name: 'Match Nul', price: C2, bookmaker: bookmaker.title },
+                        { name: match.away_team, price: C3, bookmaker: bookmaker.title },
+                    ];
+                } else { // 2 outcomes
+                    C1 = market.outcomes[0].price;
+                    C2 = market.outcomes[1].price;
+                    C3 = undefined;
+                    outcomes = [
+                        { name: market.outcomes[0].name, price: C1, bookmaker: bookmaker.title },
+                        { name: market.outcomes[1].name, price: C2, bookmaker: bookmaker.title },
+                    ];
+                }
 
-                    const a1 = C1 - 1, a2 = C2 - 1, a3 = C3 - 1;
-                    if (a1 <= 0 || a2 <= 0 || a3 <= 0) return;
+                const a1 = C1 - 1, a2 = C2 - 1;
+                if (a1 <= 0 || a2 <= 0) return;
 
-                    const freebetProfit = 100 / (1 / a1 + 1 / a2 + 1 / a3);
+                let freebetProfit, cashArbitrageROI;
 
+                if (C3 !== undefined) { // 3 outcomes calculation
+                    const a3 = C3 - 1;
+                    if (a3 <= 0) return;
+                    freebetProfit = 100 / (1 / a1 + 1 / a2 + 1 / a3);
                     const arbitrageValue = 1 / C1 + 1 / C2 + 1 / C3;
-                    const cashArbitrageROI = arbitrageValue < 1 ? (1 / arbitrageValue - 1) * 100 : null;
+                    cashArbitrageROI = arbitrageValue < 1 ? (1 / arbitrageValue - 1) * 100 : null;
+                } else { // 2 outcomes calculation
+                    freebetProfit = 100 / (1 / a1 + 1 / a2);
+                    const arbitrageValue = 1 / C1 + 1 / C2;
+                    cashArbitrageROI = arbitrageValue < 1 ? (1 / arbitrageValue - 1) * 100 : null;
+                }
 
-                    if (freebetProfit > 0) { // On ajoute seulement si le profit est positif
-                      opportunities.push({
-                          match,
-                          outcomes: [
-                              { name: match.home_team, price: C1, bookmaker: bookmaker.title },
-                              { name: 'Match Nul', price: C2, bookmaker: bookmaker.title },
-                              { name: match.away_team, price: C3, bookmaker: bookmaker.title },
-                          ],
-                          freebetProfit,
-                          cashArbitrageROI,
-                      });
-                    }
+                if (freebetProfit > 0) {
+                    opportunities.push({ match, outcomes, freebetProfit, cashArbitrageROI });
                 }
             }
         });

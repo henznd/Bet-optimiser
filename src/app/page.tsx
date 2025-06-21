@@ -5,51 +5,78 @@ import TabNavigation from '@/components/TabNavigation';
 import ManualArbitrage from '@/components/ManualArbitrage';
 import ArbitrageOpportunities from '@/components/ArbitrageOpportunities';
 
-interface Sport {
-  group: string;
+// Interface pour le typage, à garder synchronisée
+interface ArbitrageOpportunity {
+  match: any;
+  outcomes: any[];
+  freebetProfit: number;
+  cashArbitrageROI: number | null;
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'manual' | 'api'>('manual');
+  const [activeTab, setActiveTab] = useState<'manual' | 'api'>('api');
   const [sportGroups, setSportGroups] = useState<string[]>([]);
-  const [selectedSportGroup, setSelectedSportGroup] = useState('');
+  const [selectedSportGroup, setSelectedSportGroup] = useState('soccer');
   const [selectedBookmaker, setSelectedBookmaker] = useState('');
+  const [bestOpportunity, setBestOpportunity] = useState<ArbitrageOpportunity | null>(null);
+  const [loadingBest, setLoadingBest] = useState(true);
 
   useEffect(() => {
-    const fetchSports = async () => {
+    async function fetchInitialData() {
+      setLoadingBest(true);
+      // Fetch sports for the dropdown
       try {
         const response = await fetch('/api/sports');
-        const availableSports: Sport[] = await response.json();
-        const uniqueGroups = Array.from(new Set(availableSports.map(s => s.group))).sort();
-        setSportGroups(uniqueGroups);
-      } catch (error) {
-        console.error("Impossible de charger les groupes de sports :", error);
-      }
-    };
-    fetchSports();
+        if (response.ok) {
+            const data: {group: string}[] = await response.json();
+            setSportGroups(Array.from(new Set(data.map((s) => s.group))).sort());
+        }
+      } catch (error) { console.error("Failed to fetch sports", error); }
+
+      // Fetch the single best opportunity
+      try {
+        const response = await fetch('/api/best-opportunity');
+        if (response.ok) {
+            const data = await response.json();
+            setBestOpportunity(data);
+        }
+      } catch (error) { console.error("Failed to fetch best opportunity", error); }
+      
+      setLoadingBest(false);
+    }
+    fetchInitialData();
   }, []);
 
   return (
     <main className="min-h-screen bg-background flex flex-col items-center p-4 sm:p-8 md:p-12">
       <div className="w-full max-w-4xl">
-        <div className="text-center mb-10">
+        <header className="text-center mb-10">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-primary tracking-tight">
             Bet Optimiser
           </h1>
           <p className="mt-2 text-lg text-muted-foreground">
-            Calculateur d'arbitrage pour maximiser vos gains
+            Trouvez les meilleures opportunités d'arbitrage et optimisez vos mises.
           </p>
-        </div>
-        
+        </header>
+
+        {loadingBest ? (
+          <div className="text-center p-6"><p className="text-primary animate-pulse">Recherche de la meilleure opportunité...</p></div>
+        ) : bestOpportunity ? (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-center mb-4 text-amber-500">🔥 Meilleure Opportunité Actuelle</h2>
+            <ArbitrageOpportunities.BestOpportunityCard opportunity={bestOpportunity} onSelect={() => {}} />
+          </div>
+        ) : null}
+
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {activeTab === 'manual' ? (
-          <ManualArbitrage />
-        ) : (
-          <div>
+        {activeTab === 'manual' && <ManualArbitrage />}
+        
+        {activeTab === 'api' && (
+          <div className="mt-6">
             <div className="bg-card rounded-xl shadow-lg p-6 mb-6 border">
               <h2 className="text-2xl font-bold mb-6 text-center text-foreground">
-                Recherche d'opportunités
+                Rechercher par sport
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -63,7 +90,7 @@ export default function Home() {
                   >
                     <option value="">Sélectionnez un sport</option>
                     {sportGroups.map(group => (
-                      <option key={group} value={group}>{group}</option>
+                      <option key={group} value={group}>{group.charAt(0).toUpperCase() + group.slice(1).replace(/_/g, ' ')}</option>
                     ))}
                   </select>
                 </div>
@@ -76,27 +103,12 @@ export default function Home() {
                     onChange={(e) => setSelectedBookmaker(e.target.value)}
                     className="w-full px-3 py-2 border bg-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="">Tous les bookmakers</option>
+                     <option value="">Tous les bookmakers</option>
                     <optgroup label="🇫🇷 Bookmakers Français">
                       <option value="parionssport_fr">Parions Sport (FR)</option>
                       <option value="winamax_fr">Winamax (FR)</option>
                       <option value="unibet_fr">Unibet (FR)</option>
                       <option value="betclic_fr">Betclic (FR)</option>
-                    </optgroup>
-                    <optgroup label="🌍 Autres Bookmakers">
-                      <option value="winamax_de">Winamax (DE)</option>
-                      <option value="unibet_it">Unibet (IT)</option>
-                      <option value="unibet_nl">Unibet (NL)</option>
-                      <option value="betsson">Betsson</option>
-                      <option value="pinnacle">Pinnacle</option>
-                      <option value="williamhill">William Hill</option>
-                      <option value="sport888">888sport</option>
-                      <option value="coolbet">Coolbet</option>
-                      <option value="nordicbet">Nordic Bet</option>
-                      <option value="tipico_de">Tipico</option>
-                      <option value="onexbet">1xBet</option>
-                      <option value="gtbets">GTbets</option>
-                      <option value="betfair_ex_eu">Betfair</option>
                     </optgroup>
                   </select>
                 </div>
