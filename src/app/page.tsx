@@ -11,11 +11,16 @@ export default function Home() {
   const [selectedBookmaker, setSelectedBookmaker] = useState('');
 
   return (
-    <main className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Arbitrage Calculator v2
-        </h1>
+    <main className="min-h-screen bg-background flex flex-col items-center p-4 sm:p-8 md:p-12">
+      <div className="w-full max-w-4xl">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-primary tracking-tight">
+            Bet Optimiser
+          </h1>
+          <p className="mt-2 text-lg text-muted-foreground">
+            Calculateur d'arbitrage pour maximiser vos gains
+          </p>
+        </div>
         
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -23,9 +28,9 @@ export default function Home() {
           <ManualArbitrage />
         ) : (
           <div>
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h2 className="text-2xl font-bold mb-6">
-                Sélectionnez un Sport et un Bookmaker
+            <div className="bg-card rounded-xl shadow-lg p-6 mb-6 border">
+              <h2 className="text-2xl font-bold mb-6 text-center text-foreground">
+                Recherche de cotes en direct
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -35,7 +40,7 @@ export default function Home() {
                   <select
                     value={selectedSport}
                     onChange={(e) => setSelectedSport(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border bg-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Sélectionnez un sport</option>
                     <option value="soccer_france_ligue_1">Ligue 1</option>
@@ -50,7 +55,7 @@ export default function Home() {
                   <select
                     value={selectedBookmaker}
                     onChange={(e) => setSelectedBookmaker(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border bg-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Sélectionnez un bookmaker</option>
                     <option value="betclic">Betclic</option>

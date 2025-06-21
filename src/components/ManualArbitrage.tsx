@@ -103,46 +103,46 @@ export default function ManualArbitrage() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div className="bg-card rounded-xl shadow-lg p-6 md:p-8 border">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div>
-          <h2 className="text-2xl font-bold mb-4">Cotes</h2>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Cotes</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Cote Victoire
               </label>
               <input
                 type="number"
                 value={odds.victory}
                 onChange={(e) => setOdds({ ...odds, victory: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-input border-transparent rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 step="0.01"
                 min="1.01"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Cote Match nul
               </label>
               <input
                 type="number"
                 value={odds.draw}
                 onChange={(e) => setOdds({ ...odds, draw: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-input border-transparent rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 step="0.01"
                 min="1.01"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Cote Défaite
               </label>
               <input
                 type="number"
                 value={odds.defeat}
                 onChange={(e) => setOdds({ ...odds, defeat: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-input border-transparent rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 step="0.01"
                 min="1.01"
               />
@@ -151,30 +151,30 @@ export default function ManualArbitrage() {
         </div>
 
         <div>
-          <h2 className="text-2xl font-bold mb-4">Montants</h2>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Montants</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Montant Freebet (€)
               </label>
               <input
                 type="number"
                 value={amounts.freebet}
                 onChange={(e) => setAmounts({ ...amounts, freebet: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-input border-transparent rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 step="0.01"
                 min="0"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Montant Cash (€)
               </label>
               <input
                 type="number"
                 value={amounts.cash}
                 onChange={(e) => setAmounts({ ...amounts, cash: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-input border-transparent rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 step="0.01"
                 min="0"
               />
@@ -185,50 +185,60 @@ export default function ManualArbitrage() {
 
       <button
         onClick={calculateArbitrage}
-        className="w-full bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors"
+        className="w-full bg-primary text-primary-foreground font-bold py-3 px-6 rounded-md hover:bg-primary/90 transition-all text-lg shadow-lg"
       >
         🧮 Calculer l'arbitrage
       </button>
 
       {error && (
-        <div className="mt-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+        <div className="mt-6 p-4 bg-destructive/10 border-l-4 border-destructive text-destructive-foreground">
           <h3 className="font-bold">❌ Erreur</h3>
           <p>{error}</p>
         </div>
       )}
 
       {result && (
-        <div className="mt-6 p-4 bg-green-50 border-l-4 border-green-500">
-          <h3 className="text-xl font-bold text-green-800 mb-4">🎯 Résultats de l'arbitrage</h3>
+        <div className="mt-6 p-6 bg-secondary rounded-lg">
+          <h3 className="text-xl font-bold text-foreground mb-4">🎯 Résultats de l'arbitrage</h3>
           
-          <div className="space-y-2 text-green-800">
-            <p><strong>Gain garanti :</strong> {formatCurrency(result.guaranteedProfit)}</p>
-            <p><strong>Investissement cash :</strong> {formatCurrency(result.totalInvestment)}</p>
-            <p><strong>Profit net :</strong> {formatCurrency(result.guaranteedProfit - result.totalInvestment)}</p>
-            <p><strong>ROI :</strong> {result.roi.toFixed(2)}%</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-6">
+            <div className="bg-background/50 p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground">Gain garanti</p>
+              <p className="text-lg font-bold text-primary">{formatCurrency(result.guaranteedProfit)}</p>
+            </div>
+            <div className="bg-background/50 p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground">Investissement</p>
+              <p className="text-lg font-bold">{formatCurrency(result.totalInvestment)}</p>
+            </div>
+            <div className="bg-background/50 p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground">Profit Net</p>
+              <p className="text-lg font-bold text-green-500">{formatCurrency(result.guaranteedProfit - result.totalInvestment)}</p>
+            </div>
+            <div className="bg-background/50 p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground">ROI</p>
+              <p className="text-lg font-bold text-green-500">{result.roi.toFixed(2)}%</p>
+            </div>
           </div>
 
-          <div className="mt-4">
-            <h4 className="font-bold text-green-800">🎁 Répartition des freebets :</h4>
-            <ul className="list-disc list-inside space-y-1 text-green-800">
-              <li>Victoire : {formatCurrency(result.freebetDistribution.victory)}</li>
-              <li>Match nul : {formatCurrency(result.freebetDistribution.draw)}</li>
-              <li>Défaite : {formatCurrency(result.freebetDistribution.defeat)}</li>
-            </ul>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-background/50 p-4 rounded-lg">
+              <h4 className="font-bold text-foreground mb-2">🎁 Répartition des freebets :</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li className="flex justify-between"><span>Victoire:</span> <span className="font-mono">{formatCurrency(result.freebetDistribution.victory)}</span></li>
+                <li className="flex justify-between"><span>Match nul:</span> <span className="font-mono">{formatCurrency(result.freebetDistribution.draw)}</span></li>
+                <li className="flex justify-between"><span>Défaite:</span> <span className="font-mono">{formatCurrency(result.freebetDistribution.defeat)}</span></li>
+              </ul>
+            </div>
 
-          <div className="mt-4">
-            <h4 className="font-bold text-green-800">💶 Répartition du cash :</h4>
-            <ul className="list-disc list-inside space-y-1 text-green-800">
-              <li>Victoire : {formatCurrency(result.cashDistribution.victory)}</li>
-              <li>Match nul : {formatCurrency(result.cashDistribution.draw)}</li>
-              <li>Défaite : {formatCurrency(result.cashDistribution.defeat)}</li>
-            </ul>
+            <div className="bg-background/50 p-4 rounded-lg">
+              <h4 className="font-bold text-foreground mb-2">💶 Répartition du cash :</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li className="flex justify-between"><span>Victoire:</span> <span className="font-mono">{formatCurrency(result.cashDistribution.victory)}</span></li>
+                <li className="flex justify-between"><span>Match nul:</span> <span className="font-mono">{formatCurrency(result.cashDistribution.draw)}</span></li>
+                <li className="flex justify-between"><span>Défaite:</span> <span className="font-mono">{formatCurrency(result.cashDistribution.defeat)}</span></li>
+              </ul>
+            </div>
           </div>
-
-          <p className="mt-4 text-sm italic text-green-700">
-            Avec cette répartition, vous gagnez la même somme quoi qu'il arrive, en profitant au maximum des freebets (gratuits) pour booster le gain garanti.
-          </p>
         </div>
       )}
     </div>
