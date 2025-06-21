@@ -33,3 +33,4 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
     </div>
   );
 }
+
