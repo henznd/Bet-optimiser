@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const ODDS_API_KEY = 'a8f8458affe97962996ed347a1465651'; // Remplacez par process.env.ODDS_API_KEY en production
+const ODDS_API_KEY = '7520d7b120c86a7865931f5388412947'; // Remplacez par process.env.ODDS_API_KEY en production
 const API_URL = 'https://api.the-odds-api.com/v4/sports';
 
 export async function GET() {
